@@ -18,6 +18,11 @@ export default async function SpeciesList() {
   }
 
   const { data: species } = await supabase.from("species").select("*");
+  const { data: profiles } = await supabase.from("profiles").select("*");
+  const IdToName = profiles!.reduce((map: Record<string, string>, obj) => {
+    map[obj.id] = obj.display_name;
+    return map;
+  }, {});
 
   return (
     <>
@@ -27,7 +32,14 @@ export default async function SpeciesList() {
       </div>
       <Separator className="my-4" />
       <div className="flex flex-wrap justify-center">
-        {species?.map((species) => <SpeciesCard key={species.id} species={species} userId={session.user.id} />)}
+        {species?.map((species) => (
+          <SpeciesCard
+            key={species.id}
+            species={species}
+            userId={session.user.id}
+            authorName={IdToName[species.author]!}
+          />
+        ))}
       </div>
     </>
   );

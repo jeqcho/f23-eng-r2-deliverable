@@ -15,7 +15,7 @@ import { useState } from "react";
 type Species = Database["public"]["Tables"]["species"]["Row"];
 
 // Define the SpeciesDialog component
-function SpeciesDialog({ species }: { species: Species }) {
+function SpeciesDialog({ species, authorName }: { species: Species; authorName: string }) {
   const [open, setOpen] = useState(false);
 
   // Function to open the dialog
@@ -57,7 +57,7 @@ function SpeciesDialog({ species }: { species: Species }) {
         </p>
         <p>
           {/* TODO: give author name */}
-          <strong>Author:</strong> {species.author}
+          <strong>Author:</strong> {authorName}
         </p>
         <Button onClick={handleClose}>Close</Button>
       </DialogContent>

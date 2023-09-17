@@ -5,7 +5,15 @@ import EditSpeciesDialog from "./edit-species-dialog";
 import ShowSpeciesDialog from "./show-species-dialog";
 type Species = Database["public"]["Tables"]["species"]["Row"];
 
-export default function SpeciesCard({ species, userId }: { species: Species; userId: string }) {
+export default function SpeciesCard({
+  species,
+  userId,
+  authorName,
+}: {
+  species: Species;
+  userId: string;
+  authorName: string;
+}) {
   return (
     <div className="min-w-72 m-4 w-72 flex-none rounded border-2 p-3 shadow">
       {species.image && (
@@ -16,7 +24,7 @@ export default function SpeciesCard({ species, userId }: { species: Species; use
       <h3 className="mt-3 text-2xl font-semibold">{species.common_name}</h3>
       <h4 className="text-lg font-light italic">{species.scientific_name}</h4>
       <p>{species.description ? species.description.slice(0, 150).trim() + "..." : ""}</p>
-      <ShowSpeciesDialog species={species} />
+      <ShowSpeciesDialog species={species} authorName={authorName} />
       {species.author == userId ? (
         <div className="mt-3 flex justify-between">
           <div className="mr-2 w-1/2">
