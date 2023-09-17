@@ -1,8 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { Database } from "@/lib/schema";
+import Image from "next/image";
 import { useState } from "react";
 type Species = Database["public"]["Tables"]["species"]["Row"];
 
@@ -29,16 +37,17 @@ function SpeciesDialog({ species }: { species: Species }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Species Information</DialogTitle>
+          <DialogTitle className="text-2xl font-semibold"> {species.common_name}</DialogTitle>
+          <DialogDescription className="text-lg font-light italic">{species.scientific_name}</DialogDescription>
         </DialogHeader>
+        {species.image && (
+          <div className="relative h-40 w-full">
+            <Image src={species.image} alt={species.scientific_name} fill style={{ objectFit: "cover" }} />
+          </div>
+        )}
         <p>
-          <strong>Scientific Name:</strong> {species.scientific_name}
-        </p>
-        <p>
-          <strong>Common Name:</strong> {species.common_name}
-        </p>
-        <p>
-          <strong>Total Population:</strong> {species.total_population}
+          <strong>Total Population:</strong>{" "}
+          {species.total_population ? species.total_population.toLocaleString() : "Unknown"}
         </p>
         <p>
           <strong>Kingdom:</strong> {species.kingdom}
