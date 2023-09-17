@@ -73,7 +73,7 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="secondary" onClick={() => setOpen(true)} className="w-full">
-          Edit Species
+          Edit
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-screen overflow-y-auto sm:max-w-[600px]">

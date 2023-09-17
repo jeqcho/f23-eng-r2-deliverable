@@ -62,3 +62,6 @@ create policy "Users can insert their own species." on species
 
 create policy "Users can update their created species." on species
   for update using (auth.uid() = author);
+
+create policy "Users can delete their created species." on species
+	for delete using (auth.uid() = author);

@@ -1,5 +1,6 @@
 import type { Database } from "@/lib/schema";
 import Image from "next/image";
+import DeleteSpeciesDialog from "./delete-species-dialog";
 import EditSpeciesDialog from "./edit-species-dialog";
 import ShowSpeciesDialog from "./show-species-dialog";
 type Species = Database["public"]["Tables"]["species"]["Row"];
@@ -22,7 +23,7 @@ export default function SpeciesCard({ species, userId }: { species: Species; use
             <EditSpeciesDialog key={species.id} species={species} />
           </div>
           <div className="ml-2 w-1/2">
-            <EditSpeciesDialog key={species.id} species={species} />
+            <DeleteSpeciesDialog key={species.id} speciesId={species.id} />
           </div>
         </div>
       ) : null}
