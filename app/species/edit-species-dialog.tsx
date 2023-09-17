@@ -1,15 +1,7 @@
 "use client";
 
-import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,9 +15,6 @@ import { useState, type BaseSyntheticEvent } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-// We use zod (z) to define a schema for the "Add species" form.
-// zod handles validation of the input values with methods like .string(), .nullable(). It also processes the form inputs with .transform() before the inputs are sent to the database.
-
 const kingdoms = z.enum(["Animalia", "Plantae", "Fungi", "Protista", "Archaea", "Bacteria"]);
 
 const speciesSchema = z.object({
@@ -33,40 +22,38 @@ const speciesSchema = z.object({
   description: z.string().trim(),
   kingdom: kingdoms,
   scientific_name: z.string().trim().min(1),
-  total_population: z.number().int().positive().min(1).optional(),
+  total_population: z.number().int().positive().min(1).nullable(),
   image: z.string().trim().url(),
 });
 
 type FormData = z.infer<typeof speciesSchema>;
+// the difference between FormData and Species is that Species has an id field and author field
+type Species = Database["public"]["Tables"]["species"]["Row"];
 
-const defaultValues: Partial<FormData> = {
-  kingdom: "Animalia",
-};
-
-export default function AddSpeciesDialog({ userId }: { userId: string }) {
+export default function EditSpeciesDialog({ species }: { species: Species }) {
   const router = useRouter();
   const [open, setOpen] = useState<boolean>(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(speciesSchema),
-    defaultValues,
+    defaultValues: species,
     mode: "onChange",
   });
 
   const onSubmit = async (input: FormData) => {
     // The `input` prop contains data that has already been processed by zod. We can now use it in a supabase query
     const supabase = createClientComponentClient<Database>();
-    const { error } = await supabase.from("species").insert([
-      {
-        author: userId,
+    const { error } = await supabase
+      .from("species")
+      .update({
         common_name: input.common_name,
         description: input.description,
         kingdom: input.kingdom,
         scientific_name: input.scientific_name,
         total_population: input.total_population,
         image: input.image,
-      },
-    ]);
+      })
+      .eq("id", species.id);
 
     if (error) {
       return toast({
@@ -75,10 +62,6 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
         variant: "destructive",
       });
     }
-    // Reset form values to the data values that have been processed by zod.
-    // This way the user sees any changes that have occurred during transformation
-    form.reset(input);
-
     setOpen(false);
 
     // Refresh all server components in the current route. This helps display the newly created species because species are fetched in a server component, species/page.tsx.
@@ -89,17 +72,13 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary" onClick={() => setOpen(true)}>
-          <Icons.add className="mr-3 h-5 w-5" />
-          Add Species
+        <Button variant="secondary" onClick={() => setOpen(true)} className="w-full">
+          Edit Species
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-screen overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Add Species</DialogTitle>
-          <DialogDescription>
-            Add a new species here. Click &quot;Add Species&quot; below when you&apos;re done.
-          </DialogDescription>
+          <DialogTitle>Edit Species</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={(e: BaseSyntheticEvent) => void form.handleSubmit(onSubmit)(e)}>
@@ -111,7 +90,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                   <FormItem>
                     <FormLabel>Scientific Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Cavia porcellus" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -127,7 +106,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                     <FormItem>
                       <FormLabel>Common Name</FormLabel>
                       <FormControl>
-                        <Input value={value ?? ""} placeholder="Guinea pig" {...rest} />
+                        <Input value={value ?? ""} {...rest} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -164,21 +143,24 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
               <FormField
                 control={form.control}
                 name="total_population"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total population (optional)</FormLabel>
-                    <FormControl>
-                      {/* Using shadcn/ui form with number: https://github.com/shadcn-ui/ui/issues/421 */}
-                      <Input
-                        type="number"
-                        placeholder="300000"
-                        {...field}
-                        onChange={(event) => field.onChange(+event.target.value)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const { value, ...rest } = field;
+                  return (
+                    <FormItem>
+                      <FormLabel>Total population</FormLabel>
+                      <FormControl>
+                        {/* Using shadcn/ui form with number: https://github.com/shadcn-ui/ui/issues/421 */}
+                        <Input
+                          value={value ?? ""}
+                          type="number"
+                          {...rest}
+                          onChange={(event) => field.onChange(+event.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               <FormField
                 control={form.control}
@@ -187,10 +169,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                   <FormItem>
                     <FormLabel>Image URL</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/George_the_amazing_guinea_pig.jpg/440px-George_the_amazing_guinea_pig.jpg"
-                        {...field}
-                      />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -206,11 +185,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Textarea
-                          value={value ?? ""}
-                          placeholder="The guinea pig or domestic guinea pig, also known as the cavy or domestic cavy, is a species of rodent belonging to the genus Cavia in the family Caviidae."
-                          {...rest}
-                        />
+                        <Textarea value={value ?? ""} {...rest} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -219,7 +194,7 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
               />
               <div className="flex">
                 <Button type="submit" className="ml-1 mr-1 flex-auto">
-                  Add Species
+                  Edit Species
                 </Button>
                 <Button
                   type="button"

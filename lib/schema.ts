@@ -34,30 +34,30 @@ export interface Database {
       species: {
         Row: {
           author: string;
-          common_name: string | null;
-          description: string | null;
+          common_name: string;
+          description: string;
           id: number;
-          image: string | null;
+          image: string;
           kingdom: Database["public"]["Enums"]["kingdom"];
           scientific_name: string;
           total_population: number | null;
         };
         Insert: {
           author: string;
-          common_name?: string | null;
-          description?: string | null;
+          common_name: string;
+          description: string;
           id?: number;
-          image?: string | null;
+          image: string;
           kingdom: Database["public"]["Enums"]["kingdom"];
           scientific_name: string;
           total_population?: number | null;
         };
         Update: {
           author?: string;
-          common_name?: string | null;
-          description?: string | null;
+          common_name?: string;
+          description?: string;
           id?: number;
-          image?: string | null;
+          image?: string;
           kingdom?: Database["public"]["Enums"]["kingdom"];
           scientific_name?: string;
           total_population?: number | null;
