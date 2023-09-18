@@ -85,19 +85,6 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
             <div className="grid w-full items-center gap-4">
               <FormField
                 control={form.control}
-                name="scientific_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Scientific Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name="common_name"
                 render={({ field }) => {
                   // We must extract value from field and convert a potential defaultValue of `null` to "" because inputs can't handle null values: https://github.com/orgs/react-hook-form/discussions/4091
@@ -113,6 +100,20 @@ export default function EditSpeciesDialog({ species }: { species: Species }) {
                   );
                 }}
               />
+              <FormField
+                control={form.control}
+                name="scientific_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Scientific Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="kingdom"
