@@ -38,7 +38,7 @@ export default function DeleteSpeciesDialog({ speciesId }: { speciesId: number }
     // Refreshing that server component will display the new species from Supabase
     router.refresh();
     return toast({
-      description: "Species deleted",
+      description: "Deleting species...",
     });
   };
 
