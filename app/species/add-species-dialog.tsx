@@ -206,16 +206,16 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                       <FormControl>
                         <Input value={value ?? ""} placeholder="Guinea pig" {...rest} />
                       </FormControl>
-                      {field.value ? (
-                        <Button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            searchWikipedia(field.value);
-                          }}
-                        >
-                          Search Wikipedia
-                        </Button>
-                      ) : null}
+
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          searchWikipedia(field.value);
+                        }}
+                        disabled={!field.value}
+                      >
+                        Search Wikipedia
+                      </Button>
                       <FormMessage />
                     </FormItem>
                   );
