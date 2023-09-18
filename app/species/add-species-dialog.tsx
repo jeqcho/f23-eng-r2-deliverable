@@ -93,7 +93,7 @@ async function getSpeciesInfo(speciesName: string) {
 
     return { imageUrl, extract };
   } catch (error) {
-    console.error("Error fetching data from Wikipedia:", error);
+    // console.error("Error fetching data from Wikipedia:", error);
     return { imageUrl: null, extract: null };
   }
 }
@@ -136,7 +136,10 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
         }
       })
       .catch((error) => {
-        console.error("Error:", error);
+        return toast({
+          title: `Something went wrong`,
+          description: error as string,
+        });
       });
   }
 
