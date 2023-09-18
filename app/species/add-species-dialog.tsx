@@ -38,10 +38,65 @@ const speciesSchema = z.object({
 });
 
 type FormData = z.infer<typeof speciesSchema>;
+interface WikiImageData {
+  query: {
+    pages: Record<
+      string,
+      {
+        thumbnail?: {
+          source?: string;
+        };
+      }
+    >;
+  };
+}
+interface WikiExtractData {
+  query: {
+    pages: Record<
+      string,
+      {
+        extract?: string;
+      }
+    >;
+  };
+}
 
 const defaultValues: Partial<FormData> = {
   kingdom: "Animalia",
 };
+
+async function getSpeciesInfo(speciesName: string) {
+  try {
+    const encodedSpeciesName = encodeURIComponent(speciesName);
+
+    // Define the URLs for the two Wikipedia API requests
+    const imageUrlURL = `https://en.wikipedia.org/w/api.php?origin=*&action=query&format=json&titles=${encodedSpeciesName}&prop=pageimages&pithumbsize=500`;
+    const extractURL = `https://en.wikipedia.org/w/api.php?origin=*&action=query&format=json&titles=${encodedSpeciesName}&prop=extracts&exintro=true&explaintext=true&exsentences=5`;
+
+    // Fetch data from both URLs in parallel
+    const [imageResponse, extractResponse] = await Promise.all([fetch(imageUrlURL), fetch(extractURL)]);
+
+    // Check if both responses are OK (status code 200)
+    if (!imageResponse.ok || !extractResponse.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    // Parse the responses as JSON
+    const imageData = (await imageResponse.json()) as WikiImageData;
+    const extractData = (await extractResponse.json()) as WikiExtractData;
+    const firstImagePageId: string = Object.keys(imageData.query.pages)[0]!;
+    const firstExtractPageId: string = Object.keys(extractData.query.pages)[0]!; //ideally these two should agree
+
+    // Extract the data you need from both responses
+    const imageUrl: string = imageData.query.pages[firstImagePageId]?.thumbnail?.source ?? "";
+    const extract: string = extractData.query.pages[firstExtractPageId]?.extract ?? "";
+
+    return { imageUrl, extract };
+  } catch (error) {
+    console.error("Error fetching data from Wikipedia:", error);
+    return { imageUrl: null, extract: null };
+  }
+}
 
 export default function AddSpeciesDialog({ userId }: { userId: string }) {
   const router = useRouter();
@@ -52,6 +107,38 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
     defaultValues,
     mode: "onChange",
   });
+
+  function searchWikipedia(speciesName: string) {
+    getSpeciesInfo(speciesName)
+      .then(({ imageUrl, extract }) => {
+        if (imageUrl) {
+          form.setValue("image", imageUrl);
+        }
+        if (extract) {
+          form.setValue("description", extract);
+        }
+        if (imageUrl && extract) {
+          return toast({
+            title: `Found image and description for ${speciesName}`,
+            description: "Details autofilled.",
+          });
+        } else if (!imageUrl && !extract) {
+          return toast({
+            description: `No information found for ${speciesName}`,
+            variant: "destructive",
+          });
+        } else {
+          const text = imageUrl ? "image" : "description";
+          return toast({
+            title: `Found ${text} for ${speciesName}`,
+            description: "Details autofilled.",
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
 
   const onSubmit = async (input: FormData) => {
     // The `input` prop contains data that has already been processed by zod. We can now use it in a supabase query
@@ -106,19 +193,6 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
             <div className="grid w-full items-center gap-4">
               <FormField
                 control={form.control}
-                name="scientific_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Scientific Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Cavia porcellus" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name="common_name"
                 render={({ field }) => {
                   // We must extract value from field and convert a potential defaultValue of `null` to "" because inputs can't handle null values: https://github.com/orgs/react-hook-form/discussions/4091
@@ -129,11 +203,36 @@ export default function AddSpeciesDialog({ userId }: { userId: string }) {
                       <FormControl>
                         <Input value={value ?? ""} placeholder="Guinea pig" {...rest} />
                       </FormControl>
+                      {field.value ? (
+                        <Button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            searchWikipedia(field.value);
+                          }}
+                        >
+                          Search Wikipedia
+                        </Button>
+                      ) : null}
                       <FormMessage />
                     </FormItem>
                   );
                 }}
               />
+              <FormField
+                control={form.control}
+                name="scientific_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Scientific Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Cavia porcellus" {...field} />
+                    </FormControl>
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="kingdom"
