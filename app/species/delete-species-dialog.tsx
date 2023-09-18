@@ -56,7 +56,7 @@ export default function DeleteSpeciesDialog({ speciesId }: { speciesId: number }
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={() => handleConfirmDelete()} asChild>
+          <AlertDialogAction onClick={() => void handleConfirmDelete()} asChild>
             <Button variant="destructive">Delete</Button>
           </AlertDialogAction>
         </AlertDialogFooter>
